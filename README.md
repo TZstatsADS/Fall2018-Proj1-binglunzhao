@@ -10,7 +10,7 @@ This is the first and only *individual* (as opposed to *team*) this semester.
 Term: Fall 2018
 
 + Projec title: Lorem ipsum dolor sit amet
-+ This project is conducted by [your name]
++ This project is conducted by Binglun Zhao (bz2342)
 
 + Project summary: [a short summary] Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
@@ -37,5 +37,5 @@ Then, from the demographic dataset, the 101 countries catch my eyes, which I dec
 I also use clustering method to divide 60 countries into 5 different clusters. "AUS", "USA", "GBR","CAN" are in the green cluster, where "HKG", "UKR", "GHA" are in the purple cluster. The results indicate that people from the same clustering country most likely share the similar "happy moments".
 
 My main report files are linked below:
-+ Project 1 Datablog bz2342.Rmd(doc/Project 1 Datablog bz2342.Rmd)
-+ Project 1 Datablog bz2342.html(doc/Project 1 Datablog bz2342.html)
++ [Project 1 Datablog bz2342.Rmd](doc/Project 1 Datablog bz2342.Rmd)
++ [Project 1 Datablog bz2342.html](doc/Project 1 Datablog bz2342.html)
