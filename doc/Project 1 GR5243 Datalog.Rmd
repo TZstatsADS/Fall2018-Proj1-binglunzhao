@@ -1,0 +1,244 @@
+---
+title: "Project 1 GR5243 Data blog"
+author: Binglun Zhao bz2342
+output: html_notebook
+---
+
+# Happy Moment Data blog
+
+**From more than 100,000  happy moment messages from over 10,000 respomndents, the first thing I want to figure out is "What the hottest topics are they concerned?". In order to find the mixture of words that is associated with each topic, I ran Latent Dirichlet allocation by using Gibbs sampling to generate 10 different topics.I chose couple of the figures to show the topics I finalized.**
+
+```{r, message=FALSE, warning=FALSE}
+packages.used=c("rvest", "tibble", "qdap", 
+                "sentimentr", "gplots", "dplyr",
+                "tm", "syuzhet", "factoextra", 
+                "beeswarm", "scales", "RColorBrewer",
+                "RANN", "tm", "topicmodels")
+
+# check packages that need to be installed.
+packages.needed=setdiff(packages.used, 
+                        intersect(installed.packages()[,1], 
+                                  packages.used))
+# install additional packages
+if(length(packages.needed)>0){
+  install.packages(packages.needed, dependencies = TRUE)
+}
+
+# load packages
+library("rvest")
+library("tibble")
+# You may need to run
+# sudo ln -f -s $(/usr/libexec/java_home)/jre/lib/server/libjvm.dylib /usr/local/lib
+# in order to load qdap
+library("qdap")
+library("sentimentr")
+library("gplots")
+library("dplyr")
+library("tm")
+library("syuzhet")
+library("factoextra")
+library("beeswarm")
+library("scales")
+library("RColorBrewer")
+library("RANN")
+library("tm")
+library("topicmodels")
+library("wordcloud")
+
+source("../lib/plotstacked.R")
+#source("../lib/speechFuncs.R")
+```
+
+
+
+
+
+```{r}
+happy.moment=read.csv("../output/processed_moments.csv", stringsAsFactors = FALSE)
+demographic=read.csv("../data/demographic.csv")
+senselabel=read.csv("../data/senselabel.csv")
+```
+
+
+
+```{r}
+Happy.text <- happy.moment$text
+docs <- Corpus(VectorSource(Happy.text))
+dtm <- DocumentTermMatrix(docs)
+rownames(dtm) <- paste(happy.moment$reflection_period, happy.moment$wid,
+                       happy.moment$predicted_category, happy.moment$hmid, sep="_")
+
+rowTotals <- apply(dtm , 1, sum) 
+dtm  <- dtm[rowTotals> 0, ]
+happy.moment=happy.moment[rowTotals>0, ]
+```
+
+
+
+```{r}
+burnin <- 4000
+iter <- 2000
+thin <- 500
+seed <-list(2003,5,63,100001,765)
+nstart <- 5
+best <- TRUE
+
+#Number of topics
+k <- 10
+
+#Run LDA using Gibbs sampling
+ldaOut <-LDA(dtm, k, method="Gibbs", control=list(nstart=nstart, 
+                                                 seed = seed, best=best,
+                                                 burnin = burnin, iter = iter, 
+                                                 thin=thin))
+#write out results
+#docs to topics
+ldaOut.topics <- as.matrix(topics(ldaOut))
+table(c(1:k, ldaOut.topics))
+write.csv(ldaOut.topics,file=paste("../output/LDAGibbs",k,"DocsToTopics.csv"))
+
+#top 6 terms in each topic
+ldaOut.terms <- as.matrix(terms(ldaOut,20))
+write.csv(ldaOut.terms,file=paste("../output/LDAGibbs",k,"TopicsToTerms.csv"))
+
+#probabilities associated with each topic assignment
+topicProbabilities <- as.data.frame(ldaOut@gamma)
+write.csv(topicProbabilities,file=paste("../output/LDAGibbs",k,"TopicProbabilities.csv"))
+
+
+terms.beta=ldaOut@beta
+terms.beta=scale(terms.beta)
+topics.terms=NULL
+for(i in 1:k){
+  topics.terms=rbind(topics.terms, ldaOut@terms[order(terms.beta[i,], decreasing = TRUE)[1:60]])
+}
+
+for(i in 1:k){
+  topics.terms=rbind(topics.terms, ldaOut@terms[order(terms.beta[i,], decreasing = TRUE)[1:60]])
+}
+
+#par(mfrow = c(5, 2), mar = c(1,1,2,0), bty = "n", xaxt = "n", yaxt = "n")
+# visualize topics as word cloud
+for (i in c(2,3,4,6,8,9,10)) {
+  topicToViz <- i
+# select to 40 most probable terms from the topic by sorting the term-topic-probability vector in decreasing order
+  top40terms <- topics.terms[i,]
+# extract the probabilites of each of the 40 terms
+  hm_results <- posterior(ldaOut)
+  probabilities <- sort(hm_results$terms[topicToViz,], decreasing=TRUE)[1:60]
+# visualize the terms as wordcloud
+  mycolors <- brewer.pal(8, "Dark2")
+  wordcloud(top40terms, probabilities, random.order = FALSE, color = mycolors)
+}
+
+#topics.terms
+ldaOut.terms
+```
+** From the above figures, the hottest 10 topics from Happy Moment dataset can be categorized into "Shopping","School","Family","Home","Emotion","Celebration","Friend","Entertainment", "Goal","Travel". After we done this, we could compare the results with the predicted_category from the original dataset. From the heatmap, we could easily get almost the matched results,such as,"Travel&Nature", "Freind with Bonding",etc.**
+ 
+
+
+```{r}
+topics.hash=c("Shopping", "School", "Family", "Home", "Emotion", "Celebration", "Friend", "Entertainment", "Goal", "Travel")
+happy.moment$ldatopic=as.vector(ldaOut.topics)
+happy.moment$ldahash=topics.hash[ldaOut.topics]
+
+colnames(topicProbabilities)=topics.hash
+happy.moment.df=cbind(happy.moment, topicProbabilities)
+```
+
+
+
+
+```{r}
+sel.com <- c("affection", "exercise", "bonding","leisure","achievement","enjoy_the_moment","nature")
+par(mar=c(1,1,1,1))
+topic.summary=tbl_df(happy.moment.df)%>%
+              filter(reflection_period%in%c("24h", "3m"), predicted_category%in%sel.com)%>%
+              select(predicted_category, Shopping:Travel)%>%
+              group_by(predicted_category)%>%
+              summarise_each(funs(mean))
+topic.summary=as.data.frame(topic.summary)
+rownames(topic.summary)=topic.summary[,1]
+
+# [1] "Shopping"         "School"         "Family"         "Home"         
+# [5] "Emotion"        "Celebration"      "Friend"         "Game"     
+# [9] "Goal"             "Travel"      
+
+topic.plot=1:10
+print(topics.hash[topic.plot])
+
+heatmap(as.matrix(topic.summary[,topic.plot+1]), 
+          scale = "column",  
+          col = bluered(100),
+          cexRow = 0.9, cexCol = 0.9, margins = c(8, 8))
+```
+
+** Then, from the demographic dataset, the 101 countries catch my eyes, which I decided to have a look at "What are the happy moments from people with different nationalities?" I draw another heatmap to show the results. Because there are over 100 choices, I also chose only 13 out of 101, include countries from all 5 continents. For example, as we can see from this graph, people from Sweden are care most about "Family", where people from Finland are focusing on "School or Education".**
+
+
+```{r}
+par(mar=c(1,1,1,1))
+sel.country <- c("USA", "IND", 'DNK', 'VNM', 'FIN', 'AUS', 'CAN', 'GBR', 'FRA', 'NLD', 'PRT', 'RUS', 'SWE')
+country <- NULL
+for (i in 1:nrow(happy.moment.df)) {
+  country[i] <- as.character(demographic[demographic$wid == happy.moment.df$wid[i], "country"])
+}
+
+moments.df <- tbl_df(happy.moment.df)%>%
+  mutate(country = country)%>%
+  filter(country%in%sel.country)%>%
+  select(country, Shopping:Travel)%>%
+  group_by(country)%>%
+  summarise_each(funs(mean))
+moments.df <- as.data.frame(moments.df)
+rownames(moments.df) <- moments.df[,1]
+
+hm_topic.plot=1:10
+print(topics.hash[hm_topic.plot])
+
+heatmap.2(as.matrix(moments.df[,hm_topic.plot+1]), 
+          scale = "column", key=F, 
+          col=rev(colorRampPalette(brewer.pal(10, "RdBu"))(20)),
+          cexRow = 0.9, cexCol = 0.9, margins = c(8, 8),
+          trace = "none", density.info = "none")
+```
+** Because the heatmap can only show a few of the results. Therefore, I use clustering method to divide 60 countries into 5 different clusters. "AUS", "USA", "GBR","CAN" are in the green cluster, where "HKG", "UKR", "GHA" are in the purple cluster. The results indicate that people from the same clustering country most likely share the similar "happy moments".**
+
+
+```{r}
+sel.country.slot <- c(1,4,5,7,11,20,23,24,25,27,29,30,33,34,36,40,42,44,46,51,64,75,74,77,92,80,95,87,88,91,93,94,59,76,79,99,101,56,57,59,69)
+sel.country <- country[-sel.country.slot]
+
+moments.df <- tbl_df(happy.moment.df)%>%
+  mutate(country = country)%>%
+  filter(country%in%sel.country)%>%
+  select(country, Shopping:Travel)%>%
+  group_by(country)%>%
+  summarise_each(funs(mean))
+
+moments.df=as.data.frame(moments.df)
+rownames(moments.df)=as.character((moments.df[,1]))
+km.res=kmeans(scale(moments.df[,-1]), iter.max=200, 5)
+fviz_cluster(km.res, 
+             stand=T, repel= TRUE,
+             data = moments.df[,-1],
+             show.clust.cent=FALSE)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
