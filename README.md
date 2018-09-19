@@ -35,3 +35,7 @@ After we done this, we could compare the results with the predicted_category fro
 Then, from the demographic dataset, the 101 countries catch my eyes, which I decided to have a look at “What are the happy moments from people with different nationalities?” I draw another heatmap to show the results. Because there are over 100 choices, I chose only 13 out of 101, include countries from all 5 continents. For example, people from Sweden are care most about “Family”, where people from Finland are focusing on “School or Education”. 
 
 I also use clustering method to divide 60 countries into 5 different clusters. "AUS", "USA", "GBR","CAN" are in the green cluster, where "HKG", "UKR", "GHA" are in the purple cluster. The results indicate that people from the same clustering country most likely share the similar "happy moments".
+
+My main report files are linked below:
++ Project 1 Datablog bz2342.Rmd(doc/Project 1 Datablog bz2342.Rmd)
++ Project 1 Datablog bz2342.html(doc/Project 1 Datablog bz2342.html)
