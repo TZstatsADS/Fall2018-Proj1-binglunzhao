@@ -9,7 +9,7 @@ This is the first and only *individual* (as opposed to *team*) this semester.
 
 Term: Fall 2018
 
-+ Projec title: Lorem ipsum dolor sit amet
++ Project title: Happy Moment Datablog
 + This project is conducted by Binglun Zhao (bz2342)
 
 + Project summary: 
