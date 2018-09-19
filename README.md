@@ -28,8 +28,7 @@ proj/
 Please see each subfolder for a README file.
 
 ### Main Findings from Happy Moment dataset
-From more than 100,000  happy moment messages from over 10,000 respomndents, I want to figure out is "What the hottest topics are they concerned?". In order to find the mixture of words that is associated with each topic, I ran Latent Dirichlet allocation by using Gibbs sampling to generate 10 different topics. 
-They are "Shopping","School","Family","Home","Emotion","Celebration","Friend","Entertainment", "Goal","Travel".
+From more than 100,000  happy moment messages from over 10,000 respomndents, I want to figure out is "What the hottest topics are they concerned?". In order to find the mixture of words that is associated with each topic, I ran Latent Dirichlet allocation by using Gibbs sampling to generate 10 different topics. They are "Shopping","School","Family","Home","Emotion","Celebration","Friend","Entertainment", "Goal","Travel".
 
 After we done this, we could compare the results with the predicted_category from the original dataset. From the heatmap, we could easily get almost the matched results,such as,“Travel and Nature”, “Freind with Bonding”,etc. 
 
